@@ -1,6 +1,7 @@
 import sys
 import re
 import os
+import argon2
 
 def main(argv):
     if(len(argv) != 3):
@@ -20,16 +21,16 @@ def main(argv):
 def usernameValid(username):
     valid = True
 
-    if(':' in username):
-        print("Rejected - ':' in username")
+    if(SEPARATOR_CHAR in username):
+        print("Rejected - '" + SEPARATOR_CHAR + "' in username")
         valid = False
     else:
         usernameList = set({})
 
-        passFile = open(PWORD_FILENAME, 'r').read()
+        passFile = open(PWORD_FILENAME, 'r', encoding=PWORD_ENCODING).read()
 
         while(passFile != ""):
-            splitPass = passFile.split(':', 1)
+            splitPass = passFile.split(SEPARATOR_CHAR, 1)
             currentUsername = splitPass[0]
             passFile = splitPass[1][(HASH_SIZE_IN_BYTES*2)+2:]
             usernameList.add(currentUsername)
@@ -49,7 +50,7 @@ def usernameValid_old(username):
     valid = True
 
     if(':' in username):
-        print("Rejected - ':' in username")
+        print("Rejected - '" + SEPARATOR_CHAR + "' in username")
         valid = False
     else:
         usernameList = set(line.split(':')[0] for line in open(PWORD_FILENAME))
@@ -93,17 +94,20 @@ def passwordValid(password):
 def addUser(username, password):
 
     salt = os.urandom(HASH_SIZE_IN_BYTES)
-    #hashPass = hashPass(password, salt)
-    #hashPass = os.urandom(HASH_SIZE_IN_BYTES)
-    hashPass = "01234567890123456789012345678901"
+    hashPass = hashPassword(password, salt)
 
-    with open(PWORD_FILENAME, 'a') as pwordFile:
-        pwordFile.write(username + ':' + hashPass + ":" + salt + '\n') # could be any text, appended @ the end of file
+    #print("salt")
+    #print(salt)
+    #print("hashPass")
+    #print(hashPass.decode(encoding="latin-1"))
+
+    with open(PWORD_FILENAME, 'a', encoding=PWORD_ENCODING) as pwordFile:
+        pwordFile.write(username + SEPARATOR_CHAR + hashPass.decode(encoding=PWORD_ENCODING) + SEPARATOR_CHAR + salt.decode(encoding=PWORD_ENCODING) + '\n') # could be any text, appended @ the end of file
 
 
-
-#def hashPass(password, salt):
-#    return argon2.argon2_hash(password=password, salt=salt, buflen=HASH_SIZE_IN_BYTES, argon_type=argon2.Argon2Type.Argon2_i)
+#hashes the password
+def hashPassword(password, salt):
+    return argon2.argon2_hash(password=password, salt=salt, buflen=HASH_SIZE_IN_BYTES, argon_type=argon2.Argon2Type.Argon2_i)
     
     
     
@@ -112,6 +116,8 @@ def addUser(username, password):
 WORDS_FILENAME = "words.txt"    #file containing list of password "words"
 PWORD_FILENAME = "passwords.txt"    #file containing usernames and passwords
 HASH_SIZE_IN_BYTES = 32
+PWORD_ENCODING = "latin-1"
+SEPARATOR_CHAR = ':'
 
 if __name__ == "__main__":
     main(sys.argv)

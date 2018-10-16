@@ -39,13 +39,13 @@ def main(argv):
 
     if(username in passTable):
         if(passwordCorrect(username, password, passTable[username][0], passTable[username][1])):
-            print("Accepted")
+            print("Access granted")
         else:
-            # Rejected - password does not match
-            print("Rejected")
+            # Access denied - password does not match
+            print("Access denied")
     else:
-        # Rejected - username not in file
-        print("Rejected")
+        # Access denied - username not in file
+        print("Access denied")
 
 
 #---------------------------------------

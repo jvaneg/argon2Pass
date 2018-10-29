@@ -25,9 +25,17 @@ def main(argv):
     username = argv[1]
     password = argv[2]
 
+    if((len(username) == 0) or (len(password) == 0)):
+        # Rejected - username or password cannot be null
+        print("Rejected")
+        exit(-1)
+
     # read the password file into a hashtable
     passTable = {}
-    passFile = open(PWORD_FILENAME, 'r', encoding=PWORD_ENCODING).read()
+    try:
+        passFile = open(PWORD_FILENAME, 'r', encoding=PWORD_ENCODING).read()
+    except IOError:
+        passFile = open(PWORD_FILENAME, 'a+', encoding=PWORD_ENCODING).read()
 
     while(passFile != ""):
         splitPass = passFile.split(SEPARATOR_CHAR, 1)
@@ -40,12 +48,15 @@ def main(argv):
     if(username in passTable):
         if(passwordCorrect(username, password, passTable[username][0], passTable[username][1])):
             print("Access granted")
+            exit(0)
         else:
             # Access denied - password does not match
             print("Access denied")
+            exit(-1)
     else:
         # Access denied - username not in file
         print("Access denied")
+        exit(-1)
 
 
 #---------------------------------------

@@ -23,14 +23,22 @@ import argon2   #from https://pypi.org/project/argon2/
 def main(argv):
     if(len(argv) != 3):
         print("Invalid args!\nenroll.py [username] [password]")
-        exit()
+        exit(-1)
 
     username = argv[1]
     password = argv[2]
 
+    if((len(username) == 0) or (len(password) == 0)):
+        # Rejected - username or password cannot be null
+        print("Rejected")
+        exit(-1)
+
     if(usernameValid(username) and passwordValid(password)):
         addUser(username,password)
         print("Accepted")
+        exit(0)
+    else:
+        exit(-1)
     
 
 #---------------------------------------
@@ -52,8 +60,11 @@ def usernameValid(username):
     else:
         usernameList = set({})
 
-        passFile = open(PWORD_FILENAME, 'r', encoding=PWORD_ENCODING).read()
-
+        try:
+            passFile = open(PWORD_FILENAME, 'r', encoding=PWORD_ENCODING).read()
+        except IOError:
+            passFile = open(PWORD_FILENAME, 'a+', encoding=PWORD_ENCODING).read()
+        
         while(passFile != ""):
             splitPass = passFile.split(SEPARATOR_CHAR, 1)
             currentUsername = splitPass[0]
@@ -80,7 +91,11 @@ def usernameValid(username):
 def passwordValid(password):
     valid = True
 
-    wordList = set(open(WORDS_FILENAME).read().split())
+    try:
+        wordList = set(open(WORDS_FILENAME, 'r').read().split())
+    except IOError:
+        wordList = set(open(WORDS_FILENAME, 'a+').read().split())
+    
 
     if(password.isdigit()):
         # Rejected - password is [num]
@@ -122,7 +137,7 @@ def addUser(username, password):
     salt = os.urandom(HASH_SIZE_IN_BYTES)
     hashPass = hashPassword(password, salt)
 
-    with open(PWORD_FILENAME, 'a', encoding=PWORD_ENCODING) as pwordFile:
+    with open(PWORD_FILENAME, 'a+', encoding=PWORD_ENCODING) as pwordFile:
         pwordFile.write(username + SEPARATOR_CHAR + hashPass.decode(encoding=PWORD_ENCODING) + SEPARATOR_CHAR + salt.decode(encoding=PWORD_ENCODING) + '\n') # could be any text, appended @ the end of file
 
 
